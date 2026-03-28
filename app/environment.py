@@ -25,7 +25,7 @@ class CognitiveEnv(Env):
         # External hook for dynamic task generation
         self.scenario_generator = None 
         
-    def reset(self, seed: int = None, scenario_generator=None) -> Observation:
+    def reset(self, seed: int = None, scenario_generator=None) -> Dict[str, Any]:
         self.seed = seed
         if seed is not None:
             random.seed(seed)
@@ -47,9 +47,12 @@ class CognitiveEnv(Env):
             for t in initial_tasks:
                 self.tasks[t.id] = t
                 
-        return self._get_observation()
+        return self._get_observation().model_dump()
         
-    def step(self, action: Action) -> Tuple[Observation, float, bool, Dict[str, Any]]:
+    def step(self, action) -> Tuple[Dict[str, Any], float, bool, Dict[str, Any]]:
+        if isinstance(action, dict):
+            action = Action(**action)
+            
         old_time = self.current_time_step
         duration = action.duration if action.duration and action.duration > 0 else 1.0
         
@@ -78,7 +81,7 @@ class CognitiveEnv(Env):
         
         self.logger.log_step(self.current_time_step, self.stress_level, self.energy_level, action.action_type, str(action.task_id), reward)
         
-        return self._get_observation(), float(reward), done, self.state()
+        return self._get_observation().model_dump(), float(reward), done, self.state()
 
     def _process_action(self, action: Action, duration: float) -> float:
         reward = 0.0

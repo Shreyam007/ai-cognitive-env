@@ -23,15 +23,15 @@ def list_tasks():
     }
 
 @app.post("/reset")
-def reset_env():
-    obs = env.reset(seed=42)
-    return {"observation": obs.model_dump()}
+def reset_env(seed: int = None):
+    obs = env.reset(seed=seed)
+    return {"observation": obs}
 
 @app.post("/step")
 def step_env(action: Action):
     obs, reward, done, info = env.step(action)
     return {
-        "observation": obs.model_dump(),
+        "observation": obs,
         "reward": reward,
         "done": done,
         "info": info

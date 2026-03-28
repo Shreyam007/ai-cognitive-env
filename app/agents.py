@@ -9,7 +9,8 @@ class BaseAgent:
         raise NotImplementedError
 
 class RandomAgent(BaseAgent):
-    def decide(self, obs: Observation) -> Action:
+    def decide(self, obs) -> Action:
+        if isinstance(obs, dict): obs = Observation(**obs)
         actions = ['schedule_task', 'suggest_break', 'prioritize_task']
         op = random.choice(actions)
         tid = random.choice(obs.active_tasks).id if obs.active_tasks else None
@@ -17,7 +18,8 @@ class RandomAgent(BaseAgent):
         return Action(action_type=op, task_id=tid, duration=1.0)
         
 class RuleBasedAgent(BaseAgent):
-    def decide(self, obs: Observation) -> Action:
+    def decide(self, obs) -> Action:
+        if isinstance(obs, dict): obs = Observation(**obs)
         if obs.stress_level > 85 or obs.energy_level < 20:
             return Action(action_type='suggest_break', duration=1.5)
             
@@ -42,7 +44,13 @@ class BaselineAgent(BaseAgent):
             self.client = None
             self.model = None
             
-    def decide(self, obs: Observation) -> Action:
+    def decide(self, obs) -> Action:
+        if isinstance(obs, dict):
+            obs_dict = obs
+            obs = Observation(**obs)
+        else:
+            obs_dict = obs.model_dump()
+            
         if not self.client:
             if obs.active_tasks:
                 sorted_tasks = sorted(obs.active_tasks, key=lambda x: x.deadline)
@@ -57,6 +65,7 @@ class BaselineAgent(BaseAgent):
                 sorted_tasks = sorted(obs.active_tasks, key=lambda x: (x.deadline, x.duration_required))
                 return Action(action_type='schedule_task', task_id=sorted_tasks[0].id, duration=1.0)
             return Action(action_type='suggest_break', duration=1.0)
+            
         prompt = f"""You are an advanced cognitive scheduling agent. 
 Current State: Energy {obs.energy_level:.1f}, Stress {obs.stress_level:.1f}. Active Tasks: {len(obs.active_tasks)}.
 Tasks: {[t.title + ' (Due: ' + str(t.deadline) + ')' for t in obs.active_tasks]}

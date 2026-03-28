@@ -22,18 +22,34 @@ def list_tasks():
         "current_active_tasks": env.state().get("tasks")
     }
 
+from fastapi import Request
+
 @app.post("/reset")
-def reset_env(seed: int = None):
+async def reset_env(request: Request):
+    try:
+        data = await request.json()
+    except:
+        data = {}
+    
+    # Handle seed from query param or body
+    seed_q = request.query_params.get("seed")
+    seed = int(seed_q) if seed_q else data.get("seed")
+    
     obs = env.reset(seed=seed)
-    return {"observation": obs}
+    return obs  # Return raw observation dict directly
 
 @app.post("/step")
-def step_env(action: Action):
-    obs, reward, done, info = env.step(action)
+async def step_env(request: Request):
+    data = await request.json()
+    
+    # Standard OpenEnv might send {"action": {...}} or just {...} directly
+    action_data = data.get("action", data)
+    
+    obs, reward, done, info = env.step(action_data)
     return {
         "observation": obs,
-        "reward": reward,
-        "done": done,
+        "reward": float(reward),
+        "done": bool(done),
         "info": info
     }
 

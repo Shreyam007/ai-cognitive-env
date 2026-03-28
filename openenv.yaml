@@ -1,0 +1,25 @@
+name: "AI Cognitive Load Management Environment"
+description: >
+  A benchmark environment predicting and managing human cognitive load, stress, fatigue, and burnout. 
+  Evaluates an agent's ability to schedule tasks adaptively under uncertainty and high-pressure scenarios, prioritizing both productivity and mental well-being.
+version: "1.0.0"
+category: "Cognitive Modeling"
+observation_space:
+  type: "dict"
+  schema:
+    current_time_step: "float"
+    stress_level: "float"
+    energy_level: "float"
+    work_streak: "int"
+    fatigue_multiplier: "float"
+    active_tasks: "list of subset dict"
+    completed_tasks: "list of subset dict"
+    missed_tasks: "list of subset dict"
+action_space:
+  type: "dict"
+  schema:
+    action_type: "enum: schedule_task, prioritize_task, defer_task, split_task, reject_task, adjust_deadline, suggest_break"
+    task_id: "string (optional)"
+    duration: "float (optional)"
+    chunks: "int (optional)"
+    new_deadline: "float (optional)"

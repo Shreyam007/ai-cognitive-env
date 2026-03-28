@@ -1,0 +1,43 @@
+﻿
+[SECURITY WARNING] No GROQ_API_KEY or OPENAI_API_KEY found via env variables.
+The LLMBaseline agent will safely run in offline-heuristic mode. For true LLM reasoning, export the key in your terminal.
+
+=======================================================
+   SCENARIO: EASY | SEED: 42
+=======================================================
+[Random] Score: 0.53
+    Productivity Ratio: 0.50 | Action Efficiency: 0.06
+    Diagnostic: Agent completed 1/2 tasks. Agent missed 1 deadlines causing severe penalties. A large number of actions were repetitive or penalizing (low efficiency). Final calculated cognitive management score: 0.53.
+
+[RuleBased] Score: 0.82
+    Productivity Ratio: 1.00 | Action Efficiency: 0.11
+    Diagnostic: Agent completed 2/2 tasks. Stress was excellently managed. A large number of actions were repetitive or penalizing (low efficiency). Final calculated cognitive management score: 0.82.
+
+[LLMBaseline] Score: 0.82
+    Productivity Ratio: 1.00 | Action Efficiency: 0.12
+    Diagnostic: Agent completed 2/2 tasks. Stress was excellently managed. A large number of actions were repetitive or penalizing (low efficiency). Final calculated cognitive management score: 0.82.
+
+--- EASY SCENARIO RANKINGS ---
+ 1. LLMBaseline  | Score: 0.82
+ 2. RuleBased    | Score: 0.82
+ 3. Random       | Score: 0.53
+
+=======================================================
+   SCENARIO: HARD | SEED: 42
+=======================================================
+[Random] Score: 0.14
+    Productivity Ratio: 0.14 | Action Efficiency: 0.00
+    Diagnostic: Agent completed 1/7 tasks. Agent missed 6 deadlines causing severe penalties. A large number of actions were repetitive or penalizing (low efficiency). Final calculated cognitive management score: 0.14.
+
+[RuleBased] Score: 0.20
+    Productivity Ratio: 0.14 | Action Efficiency: 0.07
+    Diagnostic: Agent completed 1/7 tasks. Agent missed 6 deadlines causing severe penalties. A large number of actions were repetitive or penalizing (low efficiency). Final calculated cognitive management score: 0.20.
+
+[LLMBaseline] Score: 0.23
+    Productivity Ratio: 0.29 | Action Efficiency: 0.06
+    Diagnostic: Agent completed 2/7 tasks. Agent missed 5 deadlines causing severe penalties. A large number of actions were repetitive or penalizing (low efficiency). Final calculated cognitive management score: 0.23.
+
+--- HARD SCENARIO RANKINGS ---
+ 1. LLMBaseline  | Score: 0.23
+ 2. RuleBased    | Score: 0.20
+ 3. Random       | Score: 0.14

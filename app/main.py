@@ -22,6 +22,25 @@ def list_tasks():
         "current_active_tasks": env.state().get("tasks")
     }
 
+@app.post("/reset")
+def reset_env():
+    obs = env.reset(seed=42)
+    return {"observation": obs.model_dump()}
+
+@app.post("/step")
+def step_env(action: Action):
+    obs, reward, done, info = env.step(action)
+    return {
+        "observation": obs.model_dump(),
+        "reward": reward,
+        "done": done,
+        "info": info
+    }
+
+@app.get("/state")
+def get_state():
+    return env.state()
+
 @app.get("/grader")
 def run_grader():
     grader = MultiFactorGrader()

@@ -23,7 +23,7 @@ class RuleBasedAgent(BaseAgent):
             
         if obs.active_tasks:
             sorted_tasks = sorted(obs.active_tasks, key=lambda x: x.deadline)
-            return Action(action_type='schedule_task', task_id=sorted_tasks[0].id, duration=0.8)
+            return Action(action_type='schedule_task', task_id=sorted_tasks[0].id, duration=0.5)
             
         return Action(action_type='suggest_break', duration=1.0)
 

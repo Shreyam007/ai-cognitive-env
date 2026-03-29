@@ -25,6 +25,9 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/Shreyam007/ai-cognitive-env"
 
+[project.scripts]
+server = "app.main:app"
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["app*"]

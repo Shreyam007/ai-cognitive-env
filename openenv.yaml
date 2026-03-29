@@ -12,14 +12,19 @@ observation_space:
     energy_level: "float"
     work_streak: "int"
     fatigue_multiplier: "float"
-    active_tasks: "list of subset dict"
-    completed_tasks: "list of subset dict"
-    missed_tasks: "list of subset dict"
+    active_tasks: "list[dict]"
+    completed_tasks: "list[dict]"
+    missed_tasks: "list[dict]"
 action_space:
   type: "dict"
   schema:
-    action_type: "enum: schedule_task, prioritize_task, defer_task, split_task, reject_task, adjust_deadline, suggest_break"
-    task_id: "string (optional)"
-    duration: "float (optional)"
-    chunks: "int (optional)"
-    new_deadline: "float (optional)"
+    action_type: "string"
+    task_id: "string"
+    duration: "float"
+    chunks: "int"
+    new_deadline: "float"
+validations:
+  - step
+  - reset
+  - state
+entry_point: "server:app"

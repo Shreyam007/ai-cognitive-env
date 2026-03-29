@@ -14,6 +14,10 @@ app = FastAPI(
 # Shared environment instance for simplified API testing constraints
 env = CognitiveEnv()
 
+@app.get("/")
+def read_root():
+    return {"status": "healthy", "message": "AI Cognitive Load Environment is live and OpenEnv compliant."}
+
 @app.get("/tasks")
 def list_tasks():
     return {

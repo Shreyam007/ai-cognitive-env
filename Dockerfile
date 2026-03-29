@@ -1,19 +1,12 @@
-FROM python:3.10-slim
+FROM python:3.10
 
 WORKDIR /code
 
-# Pre-install critical binary requirements for matplotlib
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpng-dev \
-    libfreetype6-dev \
-    gcc \
-    python3-dev \
-    && rm -rf /var/lib/apt/lists/*
-
+# Pre-install requirements for fast caching
 COPY ./requirements.txt /code/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-# Non-root user setup for HF
+# Non-root user setup for HF (UID 1000)
 RUN useradd -m -u 1000 user
 USER user
 ENV HOME=/home/user \
@@ -22,4 +15,5 @@ ENV HOME=/home/user \
 WORKDIR $HOME/app
 COPY --chown=user . $HOME/app
 
+# Ensure we use the correct module:app syntax
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]

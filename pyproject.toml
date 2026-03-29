@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cognitive-load-env"
+version = "1.0.0"
+description = "A dynamic evaluation framework for modeling human cognitive load, stress, and burnout."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Shreyam Pandey", email = "p.shreyambbk@gmail.com"}
+]
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "matplotlib",
+    "openai",
+    "openenv",
+    "python-multipart"
+]
+
+[project.urls]
+Homepage = "https://github.com/Shreyam007/ai-cognitive-env"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]

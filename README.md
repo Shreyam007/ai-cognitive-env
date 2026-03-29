@@ -4,7 +4,7 @@ emoji: 🧠
 colorFrom: blue
 colorTo: indigo
 sdk: docker
-app_port: 7860
+app_file: app/main.py
 pinned: false
 ---
 # AI Cognitive Load Management Environment

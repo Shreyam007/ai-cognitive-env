@@ -1,0 +1,15 @@
+.venv
+.git
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.db
+.sqlite
+.env
+*.log
+benchmark_*.png
+*.txt
+!requirements.txt
+!final_results.txt
+!results.txt

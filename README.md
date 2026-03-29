@@ -1,3 +1,12 @@
+---
+title: Cognitive Load Env
+emoji: 🧠
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
 # AI Cognitive Load Management Environment
 **A dynamic evaluation framework for modeling human cognitive load, stress, and burnout under automated scheduling constraints.**
 

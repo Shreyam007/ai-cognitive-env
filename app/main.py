@@ -16,7 +16,11 @@ env = CognitiveEnv()
 
 @app.get("/")
 def read_root():
-    return {"status": "healthy", "message": "AI Cognitive Load Environment is live and OpenEnv compliant."}
+    return {
+        "status": "healthy",
+        "message": "AI Cognitive Load Environment is live and OpenEnv compliant.",
+        "version": "1.0.0"
+    }
 
 @app.get("/tasks")
 def list_tasks():

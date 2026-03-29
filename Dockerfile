@@ -1,25 +1,25 @@
-FROM python:3.10
+FROM python:3.10-slim
 
 WORKDIR /code
 
-COPY ./requirements.txt /code/requirements.txt
+# Pre-install critical binary requirements for matplotlib
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpng-dev \
+    libfreetype6-dev \
+    gcc \
+    python3-dev \
+    && rm -rf /var/lib/apt/lists/*
 
+COPY ./requirements.txt /code/requirements.txt
 RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
 
-# Set up a new user named "user" with user ID 1000
+# Non-root user setup for HF
 RUN useradd -m -u 1000 user
-
-# Switch to the "user" user
 USER user
-
-# Set home to the user's home directory
 ENV HOME=/home/user \
     PATH=/home/user/.local/bin:$PATH
 
-# Set the working directory to the user's home directory
 WORKDIR $HOME/app
-
-# Copy the current directory contents into the container at $HOME/app setting the owner to the user
 COPY --chown=user . $HOME/app
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "7860"]

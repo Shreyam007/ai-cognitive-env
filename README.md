@@ -18,7 +18,7 @@ Traditional job-shop scheduling environments treat tasks as static entities and 
 
 It introduces:
 - **Human Behavioral Dynamics**: Exponential stress scaling near deadlines, fatigue accumulation from consecutive effort `work_streaks`, and diminishing returns on sequential breaks.
-- **Adaptive Difficulty Mechanics**: Evaluates how agents deal with environments that scale complexity relative to success—simulating "flow states" and increased responsibility via random interruptions.
+- **Adaptive Difficulty Mechanics**: Evaluates how agents deal with environments that scale complexity relative to success-simulating "flow states" and increased responsibility via random interruptions.
 - **Long-Term Accountability**: Focuses not simply on short-horizon greed, but punishes extended cognitive burnout.
 
 ### Simple Demo Flow

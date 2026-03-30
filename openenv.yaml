@@ -23,8 +23,12 @@ action_space:
     duration: "float"
     chunks: "int"
     new_deadline: "float"
-validations:
-  - step
-  - reset
-  - state
+tasks:
+  - id: "easy_schedule"
+    description: "Manage a simple schedule with 2 stable tasks."
+  - id: "medium_load"
+    description: "Handle 3 tasks with potential interruptions."
+  - id: "hard_burnout"
+    description: "Navigate a high-stress environment with 4+ tasks and crisis events."
 entry_point: "server:app"
+

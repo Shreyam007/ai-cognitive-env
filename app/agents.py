@@ -31,18 +31,21 @@ class RuleBasedAgent(BaseAgent):
 
 class BaselineAgent(BaseAgent):
     def __init__(self):
-        self.groq_api_key = os.getenv("GROQ_API_KEY")
-        self.openai_api_key = os.getenv("OPENAI_API_KEY")
+        # Alignment with Pre-Submission Checklist
+        self.hf_token = os.getenv("HF_TOKEN")
+        self.api_base_url = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+        self.model = os.getenv("MODEL_NAME", "gpt-4o-mini")
         
-        if self.groq_api_key:
-            self.client = OpenAI(api_key=self.groq_api_key, base_url="https://api.groq.com/openai/v1")
-            self.model = "llama-3.1-8b-instant"
-        elif self.openai_api_key:
-            self.client = OpenAI(api_key=self.openai_api_key)
-            self.model = "gpt-4o-mini"
+        if self.hf_token:
+            # Use platform provided token and URL
+            self.client = OpenAI(api_key=self.hf_token, base_url=self.api_base_url)
         else:
-            self.client = None
-            self.model = None
+            # Fallback for local dev
+            self.openai_api_key = os.getenv("OPENAI_API_KEY")
+            if self.openai_api_key:
+                self.client = OpenAI(api_key=self.openai_api_key)
+            else:
+                self.client = None
             
     def decide(self, obs) -> Action:
         if isinstance(obs, dict):

@@ -30,5 +30,5 @@ tasks:
     description: "Handle 3 tasks with potential interruptions."
   - id: "hard_burnout"
     description: "Navigate a high-stress environment with 4+ tasks and crisis events."
-entry_point: "server:app"
+entry_point: "server.app:main"
 

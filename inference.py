@@ -1,46 +1,52 @@
 import os
+import sys
 import json
-from openai import OpenAI
+import io
+import contextlib
 from app.environment import CognitiveEnv
 from app.agents import BaselineAgent
 from app.tasks import ScenarioGenerator
+from app.grader import MultiFactorGrader
 
-# 1. Environment Configuration (Alignment with Pre-Submission Checklist)
-API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
-MODEL_NAME = os.getenv("MODEL_NAME", "gpt-4o-mini")
-HF_TOKEN = os.getenv("HF_TOKEN")
-
-def main():
-    # 2. Local Environment Setup
-    # Note: In the final evaluation, the platform might use its own environment runner,
-    # but inference.py must demonstrate the standard interaction loop.
+def run_task(task_name):
+    # 1. Environment and Scenario Setup
     env = CognitiveEnv()
-    scenario = ScenarioGenerator("medium")
+    scenario = ScenarioGenerator(task_name)
     
-    # Reset Environment
+    # 2. Reset Environment
     obs = env.reset(seed=42, scenario_generator=scenario)
     
-    # 3. Mandatory Structured Logging: START
-    print(f"START: {json.dumps(obs if isinstance(obs, dict) else obs.model_dump())}")
+    # 3. [START] log
+    print(f"[START] task={task_name}", flush=True)
     
     agent = BaselineAgent()
+    grader = MultiFactorGrader()
     done = False
     step_count = 0
     max_steps = 50
     
     while not done and step_count < max_steps:
-        # Agent Decision
-        action = agent.decide(obs)
+        step_count += 1
+        
+        # Agent Decision - Suppress potential debug prints from agent to stdout
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            action = agent.decide(obs)
         
         # Environment Step
         obs, reward, done, info = env.step(action)
-        step_count += 1
         
-        # 4. Mandatory Structured Logging: STEP
-        print(f"STEP: {json.dumps(obs if isinstance(obs, dict) else obs.model_dump())}")
+        # 4. [STEP] log
+        print(f"[STEP] step={step_count} reward={reward:.2f}", flush=True)
         
-    # 5. Mandatory Structured Logging: END
-    print(f"END: {json.dumps(info)}")
+    # 5. [END] log
+    final_score, _ = grader.evaluate(env)
+    print(f"[END] task={task_name} score={final_score:.2f} steps={step_count}", flush=True)
+
+def main():
+    # Implement for ALL tasks: easy, medium, hard
+    for task in ["easy", "medium", "hard"]:
+        run_task(task)
 
 if __name__ == "__main__":
     main()

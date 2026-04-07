@@ -1,7 +1,7 @@
-fastapi
-uvicorn
-pydantic
-matplotlib
-openai
-openenv
-python-multipart
+fastapi==0.110.0
+uvicorn==0.27.1
+pydantic==2.6.3
+matplotlib==3.8.3
+openai==1.13.3
+openenv==1.1.0
+python-multipart==0.0.9

@@ -32,18 +32,22 @@ class RuleBasedAgent(BaseAgent):
 class BaselineAgent(BaseAgent):
     def __init__(self):
         # Alignment with Pre-Submission Checklist
-        self.hf_token = os.getenv("HF_TOKEN")
-        self.api_base_url = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
+        # Priority 1: API_KEY (platform standard)
+        # Priority 2: HF_TOKEN (fallback platform standard)
+        self.api_key = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
+        self.api_base_url = os.getenv("API_BASE_URL")
         self.model = os.getenv("MODEL_NAME", "gpt-4o-mini")
         
-        if self.hf_token:
-            # Use platform provided token and URL
-            self.client = OpenAI(api_key=self.hf_token, base_url=self.api_base_url)
+        if self.api_key:
+            # Use platform provided token and base URL if available
+            # If API_BASE_URL is missing, default to OpenAI's standard
+            base_url = self.api_base_url if self.api_base_url else "https://api.openai.com/v1"
+            self.client = OpenAI(api_key=self.api_key, base_url=base_url)
         else:
-            # Fallback for local dev
-            self.openai_api_key = os.getenv("OPENAI_API_KEY")
-            if self.openai_api_key:
-                self.client = OpenAI(api_key=self.openai_api_key)
+            # Fallback for local development
+            self.api_key = os.getenv("OPENAI_API_KEY")
+            if self.api_key:
+                self.client = OpenAI(api_key=self.api_key)
             else:
                 self.client = None
             

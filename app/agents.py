@@ -31,25 +31,21 @@ class RuleBasedAgent(BaseAgent):
 
 class BaselineAgent(BaseAgent):
     def __init__(self):
-        import sys
         # MANDATORY: Official Platform Credentials (LiteLLM Proxy)
-        # The validator requires: base_url=os.environ["API_BASE_URL"] and api_key=os.environ["API_KEY"]
-        self.api_key = os.environ.get("API_KEY")
-        self.api_base_url = os.environ.get("API_BASE_URL")
-        self.model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+        # Using exact snippet from requirement
+        import os
+        from openai import OpenAI
         
-        if self.api_key and self.api_base_url:
-            print(f"INFO: Initializing LLM client via proxy: {self.api_base_url}", file=sys.stderr)
-            self.client = OpenAI(api_key=self.api_key, base_url=self.api_base_url)
-        elif os.environ.get("OPENAI_API_KEY"):
-            print("INFO: Using OPENAI_API_KEY from environment.", file=sys.stderr)
-            self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-        elif os.environ.get("HF_TOKEN"):
-            print("INFO: Using HF_TOKEN as API_KEY.", file=sys.stderr)
-            self.client = OpenAI(api_key=os.environ.get("HF_TOKEN"))
-        else:
-            print("WARNING: No LLM credentials found (API_KEY, OPENAI_API_KEY, or HF_TOKEN). Agent will use RuleBased logic.", file=sys.stderr)
-            self.client = None
+        try:
+            self.client = OpenAI(
+                base_url=os.environ["API_BASE_URL"],
+                api_key=os.environ["API_KEY"]
+            )
+            self.model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+        except KeyError as e:
+            import sys
+            print(f"CRITICAL ERROR: Missing environment variable {e}. Phase 2 requires API_BASE_URL and API_KEY.", file=sys.stderr)
+            raise
             
     def decide(self, obs) -> Action:
         if isinstance(obs, dict):
@@ -78,15 +74,19 @@ Current State: Energy {obs.energy_level:.1f}, Stress {obs.stress_level:.1f}. Act
 Tasks: {[t.title + ' (Due: ' + str(t.deadline) + ')' for t in obs.active_tasks]}
 Choose an action formatted as JSON matching this Action schema: {Action.model_json_schema()}"""
         
+        print("Calling LLM...", flush=True)
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
-                messages=[{"role": "system", "content": prompt}],
+                messages=[
+                    {"role": "system", "content": "You are a cognitive load management assistant."},
+                    {"role": "user", "content": prompt}
+                ],
                 max_tokens=150
             )
             content = response.choices[0].message.content
             
-            # Strip potential markdown formatting that Llama outputs natively
+            # Strip potential markdown formatting
             content = content.strip()
             if content.startswith("```json"): content = content[7:]
             elif content.startswith("```"): content = content[3:]
@@ -95,13 +95,13 @@ Choose an action formatted as JSON matching this Action schema: {Action.model_js
             
             action_data = json.loads(content)
             # Default missing fields logically if LLM misses them
-            if 'action_type' not in action_data:
-                action_data['action_type'] = 'suggest_break'
+            if 'action_type' not in action_data: action_data['action_type'] = 'suggest_break'
             if 'duration' not in action_data: action_data['duration'] = 1.0
             
             return Action(**action_data)
         except Exception as e:
-            # Redirect to stderr to ensure it shows in platform logs without polluting mandated stdout format
             import sys
-            print(f"Fallback due to API/Parsing issue: {e}", file=sys.stderr)
-            return RuleBasedAgent().decide(obs)
+            print(f"LLM Call Failed: {e}", file=sys.stderr)
+            # No fallback skipping LLM silently - but we must return an action to avoid crashing the episode
+            # We return a basic action but keep the error logged so validation sees the failure if it happens
+            return Action(action_type='suggest_break', duration=1.0)

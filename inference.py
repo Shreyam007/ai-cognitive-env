@@ -37,10 +37,8 @@ def run_task(task_name):
         while not done and step_count < max_steps:
             step_count += 1
             
-            # Agent Decision - Suppress potential debug prints from agent to stdout
-            f = io.StringIO()
-            with contextlib.redirect_stdout(f):
-                action = agent.decide(obs)
+            # Agent Decision
+            action = agent.decide(obs)
             
             # Environment Step
             obs, reward, done, info = env.step(action)

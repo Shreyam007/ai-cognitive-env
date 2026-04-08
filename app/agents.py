@@ -31,23 +31,24 @@ class RuleBasedAgent(BaseAgent):
 
 class BaselineAgent(BaseAgent):
     def __init__(self):
-        # Alignment with Pre-Submission Checklist
-        # Priority 1: API_KEY (platform standard)
-        # Priority 2: HF_TOKEN (fallback platform standard)
-        self.api_key = os.getenv("API_KEY") or os.getenv("HF_TOKEN")
+        # Priority 1: Official Platform Credentials (LiteLLM Proxy)
+        self.api_key = os.getenv("API_KEY")
         self.api_base_url = os.getenv("API_BASE_URL")
         self.model = os.getenv("MODEL_NAME", "gpt-4o-mini")
         
+        # Priority 2: Secondary Platform Fallback (HF_TOKEN)
+        if not self.api_key:
+            self.api_key = os.getenv("HF_TOKEN")
+            
         if self.api_key:
-            # Use platform provided token and base URL if available
-            # If API_BASE_URL is missing, default to OpenAI's standard
+            # Always use API_BASE_URL if provided, else default to OpenAI standard
             base_url = self.api_base_url if self.api_base_url else "https://api.openai.com/v1"
             self.client = OpenAI(api_key=self.api_key, base_url=base_url)
         else:
             # Fallback for local development
-            self.api_key = os.getenv("OPENAI_API_KEY")
-            if self.api_key:
-                self.client = OpenAI(api_key=self.api_key)
+            local_key = os.getenv("OPENAI_API_KEY")
+            if local_key:
+                self.client = OpenAI(api_key=local_key)
             else:
                 self.client = None
             
@@ -82,8 +83,7 @@ Choose an action formatted as JSON matching this Action schema: {Action.model_js
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[{"role": "system", "content": prompt}],
-                max_tokens=150,
-                response_format={ "type": "json_object" }
+                max_tokens=150
             )
             content = response.choices[0].message.content
             
@@ -102,5 +102,7 @@ Choose an action formatted as JSON matching this Action schema: {Action.model_js
             
             return Action(**action_data)
         except Exception as e:
-            print(f"Fallback due to LLM parsing issue: {e}")
+            # Redirect to stderr to ensure it shows in platform logs without polluting mandated stdout format
+            import sys
+            print(f"Fallback due to API/Parsing issue: {e}", file=sys.stderr)
             return RuleBasedAgent().decide(obs)

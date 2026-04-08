@@ -32,16 +32,15 @@ class RuleBasedAgent(BaseAgent):
 class LLMAgent(BaseAgent):
     def __init__(self):
         # MANDATORY: Official Platform Credentials (LiteLLM Proxy)
-        # Using exact snippet from requirement to guarantee compliance
+        # Using EXACT environment variables as requested
         import os
         from openai import OpenAI
         
-        # This will raise KeyError if variables are missing, ensuring no silent failure locally
         self.client = OpenAI(
-            base_url=os.environ["API_BASE_URL"],
-            api_key=os.environ["API_KEY"]
+            base_url=os.getenv("API_BASE_URL"),
+            api_key=os.getenv("HF_TOKEN") or os.getenv("API_KEY")
         )
-        self.model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
+        self.model = os.getenv("MODEL_NAME")
             
     def act(self, obs) -> Action:
         # Pre-processing observation
@@ -52,13 +51,13 @@ class LLMAgent(BaseAgent):
 Current State: Energy {obs.energy_level:.1f}, Stress {obs.stress_level:.1f}. Active Tasks: {len(obs.active_tasks)}.
 Choose an action matching this Action schema: {Action.model_json_schema()}"""
         
-        print("LLM CALL TRIGGERED", flush=True)
+        print("LLM CALL USING PROXY", flush=True)
         # NO FALLBACK: If this fails, it must raise an error so the validator knows no successful call was made
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
                 {"role": "system", "content": "You are a task planner."},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": str(obs)}
             ],
             max_tokens=150
         )

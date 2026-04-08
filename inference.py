@@ -27,16 +27,12 @@ def run_task(task_name):
         
         while not done:
             step_count += 1
-            # MUST call agent.act() which triggers LLM
+            # Real API call triggered here via LLMAgent.act()
             action = agent.act(obs)
-            
-            # Step environment
             obs, reward, done, info = env.step(action)
             
-            # 2. Step Log
             print(f"[STEP] step={step_count} reward={reward:.2f}", flush=True)
 
-        # 3. End Log
         final_score, _ = grader.evaluate(env)
         print(f"[END] task={task_name} score={final_score:.2f} steps={step_count}", flush=True)
 

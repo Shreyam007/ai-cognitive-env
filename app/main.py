@@ -3,7 +3,7 @@ from app.models import Observation, Action
 from app.environment import CognitiveEnv
 from app.tasks import ScenarioGenerator
 from app.grader import MultiFactorGrader
-from app.agents import BaselineAgent
+from app.agents import LLMAgent
 
 app = FastAPI(
     title="AI Cognitive Load Management Environment",
@@ -88,11 +88,11 @@ def run_agent_background(difficulty: str):
     local_env = CognitiveEnv()
     scenario = ScenarioGenerator(difficulty)
     obs = local_env.reset(seed=42, scenario_generator=scenario)
-    agent = BaselineAgent()
+    agent = LLMAgent()
     done = False
     
     while not done:
-        action = agent.decide(obs)
+        action = agent.act(obs)
         obs, reward, done, info = local_env.step(action)
         
     grader = MultiFactorGrader()

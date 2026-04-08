@@ -31,26 +31,25 @@ class RuleBasedAgent(BaseAgent):
 
 class BaselineAgent(BaseAgent):
     def __init__(self):
-        # Priority 1: Official Platform Credentials (LiteLLM Proxy)
-        self.api_key = os.getenv("API_KEY")
-        self.api_base_url = os.getenv("API_BASE_URL")
-        self.model = os.getenv("MODEL_NAME", "gpt-4o-mini")
+        import sys
+        # MANDATORY: Official Platform Credentials (LiteLLM Proxy)
+        # The validator requires: base_url=os.environ["API_BASE_URL"] and api_key=os.environ["API_KEY"]
+        self.api_key = os.environ.get("API_KEY")
+        self.api_base_url = os.environ.get("API_BASE_URL")
+        self.model = os.environ.get("MODEL_NAME", "gpt-4o-mini")
         
-        # Priority 2: Secondary Platform Fallback (HF_TOKEN)
-        if not self.api_key:
-            self.api_key = os.getenv("HF_TOKEN")
-            
-        if self.api_key:
-            # Always use API_BASE_URL if provided, else default to OpenAI standard
-            base_url = self.api_base_url if self.api_base_url else "https://api.openai.com/v1"
-            self.client = OpenAI(api_key=self.api_key, base_url=base_url)
+        if self.api_key and self.api_base_url:
+            print(f"INFO: Initializing LLM client via proxy: {self.api_base_url}", file=sys.stderr)
+            self.client = OpenAI(api_key=self.api_key, base_url=self.api_base_url)
+        elif os.environ.get("OPENAI_API_KEY"):
+            print("INFO: Using OPENAI_API_KEY from environment.", file=sys.stderr)
+            self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        elif os.environ.get("HF_TOKEN"):
+            print("INFO: Using HF_TOKEN as API_KEY.", file=sys.stderr)
+            self.client = OpenAI(api_key=os.environ.get("HF_TOKEN"))
         else:
-            # Fallback for local development
-            local_key = os.getenv("OPENAI_API_KEY")
-            if local_key:
-                self.client = OpenAI(api_key=local_key)
-            else:
-                self.client = None
+            print("WARNING: No LLM credentials found (API_KEY, OPENAI_API_KEY, or HF_TOKEN). Agent will use RuleBased logic.", file=sys.stderr)
+            self.client = None
             
     def decide(self, obs) -> Action:
         if isinstance(obs, dict):

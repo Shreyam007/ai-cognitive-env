@@ -25,6 +25,10 @@ def run_task(task_name):
         obs = env.reset(seed=42, scenario_generator=scenario)
         
         agent = BaselineAgent()
+        # Diagnostic log to stderr
+        client_status = "READY" if agent.client else "MISSING (FALLBACK TO RULE-BASED)"
+        print(f"DEBUG: Agent initialized. LLM Client: {client_status}", file=sys.stderr)
+        
         grader = MultiFactorGrader()
         done = False
         step_count = 0

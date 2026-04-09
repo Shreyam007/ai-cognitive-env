@@ -32,28 +32,26 @@ class RuleBasedAgent(BaseAgent):
 class LLMAgent(BaseAgent):
     def __init__(self):
         # MANDATORY: Official Platform Credentials (LiteLLM Proxy)
-        # Using exact snippet from requirement: prioritize API_KEY then HF_TOKEN
         import os
         from openai import OpenAI
         
-        # Pull from environment. Using .get() for the flexible key but failing if neither exists.
-        base_url = os.environ.get("API_BASE_URL")
-        api_key = os.environ.get("API_KEY") or os.environ.get("HF_TOKEN")
-        model_name = os.environ.get("MODEL_NAME")
-        
-        if not base_url or not api_key:
-            raise KeyError(f"CRITICAL: Missing LLM configuration. API_BASE_URL: {'found' if base_url else 'MISSING'}, API_KEY/HF_TOKEN: {'found' if api_key else 'MISSING'}")
-
-        self.client = OpenAI(base_url=base_url, api_key=api_key)
-        self.model = model_name
+        # Initialize exactly as requested
+        self.client = OpenAI(
+            base_url=os.getenv("API_BASE_URL"),
+            api_key=os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+        )
+        self.model = os.getenv("MODEL_NAME")
             
     def act(self, obs) -> Action:
         # Pre-processing observation
         if isinstance(obs, dict):
             obs = Observation(**obs)
         
-        # NO FALLBACK: This method MUST trigger an API call.
-        print("LLM CALL USING PROXY", flush=True)
+        # MANDATORY DEBUG PRINT
+        import os
+        print("LLM CALL USING API_BASE_URL:", os.getenv("API_BASE_URL"), flush=True)
+        
+        # Mandatory message structure: system: task planner, user: str(observation)
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[
@@ -74,5 +72,4 @@ class LLMAgent(BaseAgent):
         return Action(**action_data)
 
     def decide(self, obs) -> Action:
-        # Legacy support for main.py while transitioning
         return self.act(obs)

@@ -63,11 +63,12 @@ class MultiFactorGrader:
         )
         final_score -= (missed * 0.02)
 
-        final_score = self._safe_round(final_score)
-        completion_ratio = self._safe_round(completion_ratio)
-        stress_score = self._safe_round(stress_score)
-        efficiency = self._safe_round(efficiency)
-        adaptability = self._safe_round(adaptability)
+        # EXACT USER REQUEST: ONLY 0 OR 1 STRICTLY, NO DECIMALS
+        final_score = 1 if final_score > 0.5 else 0
+        completion_ratio = 1 if completion_ratio > 0.5 else 0
+        stress_score = 1 if stress_score > 0.5 else 0
+        efficiency = 1 if efficiency > 0.5 else 0
+        adaptability = 1 if adaptability > 0.5 else 0
 
         explanation = f"Agent completed {completed}/{total_tasks} tasks. "
         if missed > 0:
@@ -80,7 +81,7 @@ class MultiFactorGrader:
         if efficiency < 0.3:
             explanation += "A large number of actions were repetitive or penalizing (low efficiency). "
 
-        explanation += f"Final calculated cognitive management score: {final_score:.2f}."
+        explanation += f"Final calculated cognitive management score: {final_score}."
 
         sub_scores = {
             "completion_ratio": completion_ratio,
@@ -90,4 +91,5 @@ class MultiFactorGrader:
             "explanation": explanation
         }
 
-        return final_score, sub_scores
+        # Return as strict INT
+        return int(final_score), sub_scores

@@ -8,17 +8,7 @@ class MultiFactorGrader:
             return 0.01
         if value >= 1.0:
             return 0.99
-        return value
-
-    def _band_score(self, value: float) -> float:
-        """
-        Convert any numeric value into a safe strict-open interval score.
-        """
-        if value <= 0.0:
-            return 0.01
-        if value >= 1.0:
-            return 0.99
-        return round(max(0.01, min(0.99, value)), 2)
+        return round(value, 2)
 
     def evaluate(self, env: CognitiveEnv) -> Tuple[float, Dict[str, Any]]:
         total_tasks = len(env.tasks)
@@ -26,18 +16,16 @@ class MultiFactorGrader:
         missed = sum(1 for t in env.tasks.values() if t.status == "missed")
 
         history = getattr(env.logger, "history", [])
-        stresses = [entry.get("stress", 0.5) for entry in history]
-        if not stresses:
-            stresses = [0.5]
+        stresses = [entry.get("stress", 0.5) for entry in history] or [0.5]
 
         avg_stress = sum(stresses) / len(stresses)
         peak_stress = max(stresses)
 
-        # Base metrics
-        completion_ratio = completed / max(1, total_tasks)
+        # Raw metrics
+        raw_completion_ratio = completed / max(1, total_tasks)
         useful_actions = sum(1 for entry in history if entry.get("reward", 0) > 0)
         total_actions = max(1, len(history))
-        efficiency = useful_actions / total_actions
+        raw_efficiency = useful_actions / total_actions
 
         interruptions_handled = sum(
             1 for t in env.tasks.values()
@@ -46,20 +34,24 @@ class MultiFactorGrader:
 
         difficulty = getattr(env.scenario_generator, "difficulty", "")
         if interruptions_handled > 0:
-            adaptability = 0.90
+            raw_adaptability = 0.90
         else:
-            adaptability = 0.65 if "hard" in difficulty else 0.80
+            raw_adaptability = 0.65 if "hard" in difficulty else 0.80
 
-        # Stress score from stress levels
-        stress_score = 0.95
+        raw_stress_score = 0.95
         if avg_stress > 60:
-            stress_score -= 0.25
+            raw_stress_score -= 0.25
         if avg_stress > 80:
-            stress_score -= 0.25
+            raw_stress_score -= 0.25
         if peak_stress >= 95:
-            stress_score -= 0.20
+            raw_stress_score -= 0.20
 
-        # Final score
+        # Clamp inputs BEFORE weighted score
+        completion_ratio = self._clamp_open_01(raw_completion_ratio)
+        stress_score = self._clamp_open_01(raw_stress_score)
+        efficiency = self._clamp_open_01(raw_efficiency)
+        adaptability = self._clamp_open_01(raw_adaptability)
+
         final_score = (
             0.4 * completion_ratio +
             0.3 * stress_score +
@@ -67,15 +59,8 @@ class MultiFactorGrader:
             0.1 * adaptability
         )
 
-        # Penalty for missed tasks
         final_score -= missed * 0.02
-
-        # Safe clamping
-        completion_ratio = self._band_score(completion_ratio)
-        stress_score = self._band_score(stress_score)
-        efficiency = self._band_score(efficiency)
-        adaptability = self._band_score(adaptability)
-        final_score = self._band_score(final_score)
+        final_score = self._clamp_open_01(final_score)
 
         explanation = f"Agent completed {completed}/{total_tasks} tasks."
         if missed > 0:

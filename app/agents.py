@@ -32,22 +32,26 @@ class RuleBasedAgent(BaseAgent):
 class LLMAgent(BaseAgent):
     def __init__(self):
         # MANDATORY: Official Platform Credentials (LiteLLM Proxy)
-        import os
-        from openai import OpenAI
+        # Using ONLY platform-provided environment variables via os.environ for mandatory presence
         
-        # Initialize exactly as requested
+        # Determine API Key (checklist says HF_TOKEN, text says API_KEY)
+        api_key = os.environ.get("HF_TOKEN") or os.environ.get("API_KEY")
+        if not api_key:
+            raise KeyError("Neither HF_TOKEN nor API_KEY found in environment.")
+
+        # This will raise KeyError immediately if they are missing
         self.client = OpenAI(
-            base_url=os.getenv("API_BASE_URL"),
-            api_key=os.getenv("HF_TOKEN") or os.getenv("API_KEY")
+            base_url=os.environ["API_BASE_URL"],
+            api_key=api_key
         )
-        self.model = os.getenv("MODEL_NAME")
+        self.model = os.environ["MODEL_NAME"]
             
     def act(self, obs) -> Action:
         # Pre-processing observation
         if isinstance(obs, dict):
             obs = Observation(**obs)
         
-        # Mandatory message structure: system: task planner, user: str(observation)
+        # NO FALLBACK: This MUST trigger an API call. No prints allowed per strict output rules.
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[

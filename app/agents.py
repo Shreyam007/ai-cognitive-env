@@ -39,12 +39,12 @@ class LLMAgent(BaseAgent):
         if not api_key:
             raise KeyError("Neither HF_TOKEN nor API_KEY found in environment.")
 
-        # This will raise KeyError immediately if they are missing
+        # This uses defaults to avoid KeyError on platforms that don't inject them
         self.client = OpenAI(
-            base_url=os.environ["API_BASE_URL"],
+            base_url=os.getenv("API_BASE_URL", "https://api.openai.com/v1"),
             api_key=api_key
         )
-        self.model = os.environ["MODEL_NAME"]
+        self.model = os.getenv("MODEL_NAME", "gpt-4.1-mini")
             
     def act(self, obs) -> Action:
         # Pre-processing observation

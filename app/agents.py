@@ -32,27 +32,28 @@ class RuleBasedAgent(BaseAgent):
 class LLMAgent(BaseAgent):
     def __init__(self):
         # MANDATORY: Official Platform Credentials (LiteLLM Proxy)
-        # Using EXACT environment variables as requested
+        # Using exact snippet from requirement: prioritize API_KEY then HF_TOKEN
         import os
         from openai import OpenAI
         
-        self.client = OpenAI(
-            base_url=os.getenv("API_BASE_URL"),
-            api_key=os.getenv("HF_TOKEN") or os.getenv("API_KEY")
-        )
-        self.model = os.getenv("MODEL_NAME")
+        # Pull from environment. Using .get() for the flexible key but failing if neither exists.
+        base_url = os.environ.get("API_BASE_URL")
+        api_key = os.environ.get("API_KEY") or os.environ.get("HF_TOKEN")
+        model_name = os.environ.get("MODEL_NAME")
+        
+        if not base_url or not api_key:
+            raise KeyError(f"CRITICAL: Missing LLM configuration. API_BASE_URL: {'found' if base_url else 'MISSING'}, API_KEY/HF_TOKEN: {'found' if api_key else 'MISSING'}")
+
+        self.client = OpenAI(base_url=base_url, api_key=api_key)
+        self.model = model_name
             
     def act(self, obs) -> Action:
         # Pre-processing observation
         if isinstance(obs, dict):
             obs = Observation(**obs)
-            
-        prompt = f"""You are a task planner for a cognitive load environment.
-Current State: Energy {obs.energy_level:.1f}, Stress {obs.stress_level:.1f}. Active Tasks: {len(obs.active_tasks)}.
-Choose an action matching this Action schema: {Action.model_json_schema()}"""
         
+        # NO FALLBACK: This method MUST trigger an API call.
         print("LLM CALL USING PROXY", flush=True)
-        # NO FALLBACK: If this fails, it must raise an error so the validator knows no successful call was made
         response = self.client.chat.completions.create(
             model=self.model,
             messages=[

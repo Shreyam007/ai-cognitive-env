@@ -31,16 +31,18 @@ def run_task(task_name):
             action = agent.act(obs)
             obs, reward, done, info = env.step(action)
             
-            print(f"[STEP] step={step_count} reward={reward:.2f}", flush=True)
+            # Use raw reward formatting to match exact validator expectations
+            print(f"[STEP] step={step_count} reward={reward}", flush=True)
 
         final_score, _ = grader.evaluate(env)
-        print(f"[END] task={task_name} score={final_score:.2f} steps={step_count}", flush=True)
+        print(f"[END] task={task_name} score={final_score} steps={step_count}", flush=True)
 
-    except Exception as e:
+    except (ImportError, ModuleNotFoundError) as e:
         import traceback
-        print(f"CRITICAL FAILURE: {e}", file=sys.stderr)
+        print(f"FAILED TO START: {e}", file=sys.stderr)
         traceback.print_exc(file=sys.stderr)
-        # Ensure [END] is still printed even on failure to avoid hanging validation
+        # We only catch imports to avoid environment-setup blockers, 
+        # but simulation errors should crash.
         print(f"[END] task={task_name} score=0.0 steps=0", flush=True)
 
 def main():

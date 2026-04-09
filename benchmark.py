@@ -2,7 +2,7 @@ import os
 from app.environment import CognitiveEnv
 from app.tasks import ScenarioGenerator
 from app.grader import MultiFactorGrader
-from app.agents import RandomAgent, RuleBasedAgent, BaselineAgent
+from app.agents import RandomAgent, RuleBasedAgent, LLMAgent
 
 def run_benchmark(difficulty="easy", seed=42):
     print(f"\n{'='*55}\n   SCENARIO: {difficulty.upper()} | SEED: {seed}\n{'='*55}")
@@ -10,7 +10,7 @@ def run_benchmark(difficulty="easy", seed=42):
     agents = {
         "Random": RandomAgent(),
         "RuleBased": RuleBasedAgent(),
-        "LLMBaseline": BaselineAgent()
+        "LLMBaseline": LLMAgent()
     }
     
     results = []

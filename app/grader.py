@@ -35,7 +35,8 @@ class MultiFactorGrader:
         
         # Penalties for missed deadlines
         final_score -= (missed * 0.02)
-        final_score = max(0.0, min(1.0, final_score))
+        # Ensure it is strictly between 0 and 1 (exclusive) per validation rules
+        final_score = max(0.01, min(0.99, final_score))
         
         # Explanation Generation
         explanation = f"Agent completed {completed}/{total_tasks} tasks. "

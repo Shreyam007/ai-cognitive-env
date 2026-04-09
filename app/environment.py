@@ -77,11 +77,21 @@ class CognitiveEnv(Env):
         # Calculate composites
         reward += self._calculate_continuous_reward()
         
+        # VALIDATION FIX: Clamp the step reward strictly into (0, 1) exclusively
+        # The OpenEnv evaluator often extracts 'reward' from the trajectory as the 'task score'
+        reward = float(reward)
+        if reward <= 0.0:
+            reward = 0.01
+        elif reward >= 1.0:
+            reward = 0.99
+        else:
+            reward = round(reward, 2)
+        
         done = self.current_time_step >= self.max_steps or self.energy_level <= 0
         
         self.logger.log_step(self.current_time_step, self.stress_level, self.energy_level, action.action_type, str(action.task_id), reward)
         
-        return self._get_observation().model_dump(), float(reward), done, self.state()
+        return self._get_observation().model_dump(), reward, done, self.state()
 
     def _process_action(self, action: Action, duration: float) -> float:
         reward = 0.0

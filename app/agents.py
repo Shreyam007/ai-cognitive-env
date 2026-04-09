@@ -47,10 +47,6 @@ class LLMAgent(BaseAgent):
         if isinstance(obs, dict):
             obs = Observation(**obs)
         
-        # MANDATORY DEBUG PRINT
-        import os
-        print("LLM CALL USING API_BASE_URL:", os.getenv("API_BASE_URL"), flush=True)
-        
         # Mandatory message structure: system: task planner, user: str(observation)
         response = self.client.chat.completions.create(
             model=self.model,

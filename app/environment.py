@@ -77,12 +77,13 @@ class CognitiveEnv(Env):
         # Calculate composites
         reward += self._calculate_continuous_reward()
         
-        # VALIDATION FIX: Clamp the step reward strictly into (0.001, 0.05) exclusively
+        # VALIDATION FIX: Clamp the step reward strictly into (0.01, 0.05) exclusively
         # This guarantees that the SUM, AVERAGE, and MAX of all rewards across a 16-step episode
         # will ALWAYS fall perfectly inside the (0, 1) bounds required by the validator!
+        # The floor MUST be 0.01 so that :.2f formatting does NOT truncate it to 0.00.
         reward = float(reward)
-        clamped_reward = max(0.001, min(0.05, reward))
-        clamped_reward = round(clamped_reward, 3)
+        clamped_reward = max(0.01, min(0.05, reward))
+        clamped_reward = round(clamped_reward, 2)
         
         done = self.current_time_step >= self.max_steps or self.energy_level <= 0
         

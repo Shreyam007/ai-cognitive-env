@@ -3,12 +3,12 @@ from typing import Tuple, Dict, Any
 
 class MultiFactorGrader:
     def _clamp_open_01(self, value: float) -> float:
-        value = float(value)
+        value = round(float(value), 2)
         if value <= 0.0:
             return 0.01
         if value >= 1.0:
             return 0.99
-        return round(value, 2)
+        return value
 
     def evaluate(self, env: CognitiveEnv) -> Tuple[float, Dict[str, Any]]:
         total_tasks = len(env.tasks)

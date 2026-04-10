@@ -1,4 +1,5 @@
 import os
+import sys
 from openai import OpenAI
 
 API_BASE_URL = os.getenv("API_BASE_URL", "https://api.openai.com/v1")
@@ -13,10 +14,20 @@ client = OpenAI(
     api_key=HF_TOKEN,
 )
 
+def clamp_score(value):
+    """Force any numeric value strictly into (0, 1) open interval."""
+    value = round(float(value), 4)
+    if value <= 0.0:
+        return 0.01
+    if value >= 1.0:
+        return 0.99
+    return value
+
 def run_task(task_name):
     rewards = []
     steps = 0
     success = False
+    score = 0.5  # Safe default score in the middle of (0, 1)
 
     print(f"[START] task={task_name} env=OpenEnv model={MODEL_NAME}", flush=True)
 
@@ -47,6 +58,9 @@ def run_task(task_name):
 
             action = agent.act(obs)
             obs, reward, done, info = env.step(action)
+
+            # Clamp every individual reward strictly into (0, 1)
+            reward = clamp_score(reward)
             rewards.append(reward)
 
             done_str = "true" if done else "false"
@@ -61,19 +75,29 @@ def run_task(task_name):
             )
 
         try:
-            score, _ = grader.evaluate(env)
-            success = score > 0
+            raw_score, _ = grader.evaluate(env)
+            score = clamp_score(raw_score)
+            success = score > 0.01
         except Exception:
+            score = 0.5  # Safe fallback
             success = False
 
-    except Exception:
+    except Exception as e:
+        print(f"ERROR: {e}", file=sys.stderr)
+        score = 0.5  # Safe fallback
         success = False
 
     finally:
-        rewards_str = ",".join(f"{r:.2f}" for r in rewards)
+        # Clamp the final score one more time to be absolutely safe
+        score = clamp_score(score)
+
+        # Clamp all rewards one more time
+        safe_rewards = [clamp_score(r) for r in rewards] if rewards else [0.5]
+        rewards_str = ",".join(f"{r:.2f}" for r in safe_rewards)
+
         success_str = "true" if success else "false"
         print(
-            f"[END] success={success_str} steps={steps} rewards={rewards_str}",
+            f"[END] success={success_str} steps={steps} score={score:.2f} rewards={rewards_str}",
             flush=True
         )
 

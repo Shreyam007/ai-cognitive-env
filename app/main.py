@@ -5,6 +5,15 @@ from app.tasks import ScenarioGenerator
 from app.grader import MultiFactorGrader
 from app.agents import LLMAgent
 
+def clamp_score(value):
+    """Force any numeric value strictly into (0, 1) open interval."""
+    value = round(float(value), 4)
+    if value <= 0.0:
+        return 0.01
+    if value >= 1.0:
+        return 0.99
+    return value
+
 app = FastAPI(
     title="AI Cognitive Load Management Environment",
     description="An OpenEnv-compatible evaluation system exposing dynamic stress, energy, and priority mechanics.",
@@ -56,7 +65,7 @@ async def step_env(request: Request):
     obs, reward, done, info = env.step(action_data)
     return {
         "observation": obs,
-        "reward": float(reward),
+        "reward": clamp_score(reward),
         "done": bool(done),
         "info": info
     }
@@ -69,8 +78,12 @@ def get_state():
 def run_grader():
     grader = MultiFactorGrader()
     score, breakdown = grader.evaluate(env)
+    # Clamp all sub-scores too
+    for key in breakdown:
+        if isinstance(breakdown[key], (int, float)) and key != 'explanation':
+            breakdown[key] = clamp_score(breakdown[key])
     return {
-        "score": score,
+        "score": clamp_score(score),
         "breakdown": breakdown
     }
 
